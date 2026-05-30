@@ -49,15 +49,36 @@ class LedController:
             self._dev = dev
         return self._dev
 
+    def _reset_device(self) -> None:
+        dev = self._dev
+        self._dev = None
+        if dev is None:
+            return
+        close = getattr(dev, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception:
+                pass
+
     def _send_sync(self, r: int, g: int, b: int) -> None:
         dev = self._get_device()
         try:
             # nowait=True: fire-and-forget — no blocking response wait.
             # For ambilight we care about throughput, not ACK confirmation.
             dev.set_colour(r, g, b, nowait=True)
+            return
         except Exception as exc:
-            log.warning("Tuya send failed, reconnecting: %s", exc)
-            self._dev = None  # Force reconnect on next call
+            log.warning("Tuya send failed, reconnecting once: %s", exc)
+            self._reset_device()
+
+        # Retry once immediately with a fresh connection.
+        dev = self._get_device()
+        try:
+            dev.set_colour(r, g, b, nowait=True)
+        except Exception as exc:
+            log.warning("Tuya send failed after reconnect: %s", exc)
+            self._reset_device()
             raise
 
     # ------------------------------------------------------------------

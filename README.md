@@ -11,6 +11,7 @@ and mirrors it on a local Tuya LED strip — much like Philips TV Ambilight.
 | Dependency | Purpose |
 |---|---|
 | [uv](https://github.com/astral-sh/uv) | Python env & packaging |
+| [Task](https://taskfile.dev/) *(optional)* | Shortcut commands (`task install`, service setup, config generation) |
 | [grim](https://sr.ht/~emersion/grim/) | Wayland screen capture |
 | `hyprctl` | Active window geometry (bundled with Hyprland) |
 | Tuya LED strip | On the same LAN, local-control enabled |
@@ -42,6 +43,25 @@ Performance notes:
   wait, maximising throughput.
 - Setting `bulb_type = "B"` in config skips the auto-detection status request
   on first use (recommended for modern RGB LED strips).
+
+---
+
+## Taskfile Shortcuts
+
+If you have `task` installed, you can use these commands:
+
+```bash
+# Install deps + create config.toml if missing
+task install
+
+# Build config.toml from tuya-raw.json (or devices.json)
+task config-from-raw
+task config-from-raw INPUT=devices.json
+task config-from-raw INPUT=tuya-raw.json DEVICE=<device_id_or_exact_name>
+
+# Install/enable systemd user service
+task install-service
+```
 
 ---
 

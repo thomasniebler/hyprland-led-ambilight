@@ -9,3 +9,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local/runtime files
+config.toml
+devices.json
+snapshot.json
+tinytuya.json
+tuya-raw.json

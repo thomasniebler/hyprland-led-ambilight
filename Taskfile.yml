@@ -1,0 +1,49 @@
+version: "3"
+
+vars:
+  PROJECT_DIR: "{{.TASKFILE_DIR}}"
+  SERVICE_FILE: "{{.HOME}}/.config/systemd/user/tuyactrl.service"
+
+tasks:
+  install:
+    desc: Install Python dependencies and prepare local config.toml
+    cmds:
+      - uv sync
+      - test -f config.toml || cp config.example.toml config.toml
+
+  install-service:
+    desc: Install and enable tuyactrl as a systemd user service
+    deps: [install]
+    cmds:
+      - mkdir -p "{{.HOME}}/.config/systemd/user"
+      - |
+        cat > "{{.SERVICE_FILE}}" <<EOF
+        [Unit]
+        Description=Tuya ambilight (Hyprland)
+        After=graphical-session.target
+        PartOf=graphical-session.target
+
+        [Service]
+        Type=simple
+        WorkingDirectory={{.PROJECT_DIR}}
+        ExecStart={{.PROJECT_DIR}}/.venv/bin/tuyactrl -c {{.PROJECT_DIR}}/config.toml
+        Restart=on-failure
+        RestartSec=5s
+
+        [Install]
+        WantedBy=graphical-session.target
+        EOF
+      - systemctl --user daemon-reload
+      - systemctl --user enable --now tuyactrl.service
+
+  config-from-raw:
+    desc: Generate config.toml from tuya-raw.json or devices.json
+    vars:
+      INPUT: '{{default "tuya-raw.json" .INPUT}}'
+      OUTPUT: '{{default "config.toml" .OUTPUT}}'
+      DEVICE: '{{default "" .DEVICE}}'
+    cmds:
+      - |
+        sh -c 'uv run python scripts/tuya_raw_to_config.py --input "{{.INPUT}}" --output "{{.OUTPUT}}" ${DEVICE:+--device "$DEVICE"}'
+    env:
+      DEVICE: "{{.DEVICE}}"
