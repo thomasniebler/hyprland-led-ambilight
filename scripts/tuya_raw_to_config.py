@@ -88,7 +88,7 @@ sample_size = 64
 min_saturation = 0.15
 
 [color]
-enable_smoothing = true
+enable_smoothing = false
 smoothing_alpha = 0.18
 saturation_boost = 1.4
 max_saturation = 1.0

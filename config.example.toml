@@ -38,7 +38,7 @@ min_saturation = 0.15
 
 [color]
 # Set to false to disable smoothing entirely (instant color jumps).
-enable_smoothing = true
+enable_smoothing = false
 
 # Exponential-moving-average alpha applied every frame.
 # 0 = frozen, 1 = instant.  Lower values = smoother, slower transitions.

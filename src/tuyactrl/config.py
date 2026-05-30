@@ -41,7 +41,7 @@ class CaptureConfig:
 @dataclass
 class ColorConfig:
     # Toggle HSV smoothing on/off.
-    enable_smoothing: bool = True
+    enable_smoothing: bool = False
     # Exponential-moving-average factor per frame (0 = frozen, 1 = instant).
     smoothing_alpha: float = 0.18
     # Multiply saturation of the output color by this factor.

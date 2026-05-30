@@ -153,7 +153,7 @@ inline documentation.  Key knobs:
 | `capture.interval_ms` | 100 | Poll interval — lower = faster reaction, more CPU/network |
 | `capture.sample_size` | 64 | Resize dimension before colour analysis |
 | `capture.min_saturation` | 0.15 | Ignore grey/white pixels (terminals, blank desktops) |
-| `color.enable_smoothing` | `true` | Set `false` for immediate (unsmoothed) color changes |
+| `color.enable_smoothing` | `false` | Set `true` to enable HSV smoothing/fades |
 | `color.smoothing_alpha` | 0.18 | EMA factor — lower = slower cinematic fades |
 | `color.saturation_boost` | 1.4 | Multiply saturation — punch up dull content |
 | `tuya.min_change` | 4 | Skip Tuya send if summed RGB channel delta < this value |

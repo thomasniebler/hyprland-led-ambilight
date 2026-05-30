@@ -36,7 +36,7 @@ def test_minimal_config_loads():
     assert cfg.tuya.ip == "192.168.1.42"
     # Defaults should be populated
     assert cfg.capture.interval_ms == 100
-    assert cfg.color.enable_smoothing is True
+    assert cfg.color.enable_smoothing is False
     assert cfg.color.smoothing_alpha == 0.18
 
 
@@ -48,7 +48,7 @@ sample_size = 32
 min_saturation = 0.25
 
 [color]
-enable_smoothing = false
+enable_smoothing = true
 smoothing_alpha = 0.5
 saturation_boost = 2.0
 max_saturation = 0.9
@@ -57,7 +57,7 @@ max_saturation = 0.9
     assert cfg.capture.interval_ms == 200
     assert cfg.capture.sample_size == 32
     assert cfg.capture.min_saturation == 0.25
-    assert cfg.color.enable_smoothing is False
+    assert cfg.color.enable_smoothing is True
     assert cfg.color.smoothing_alpha == 0.5
     assert cfg.color.saturation_boost == 2.0
     assert cfg.color.max_saturation == 0.9
