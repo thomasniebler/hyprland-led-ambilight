@@ -40,6 +40,8 @@ class CaptureConfig:
 
 @dataclass
 class ColorConfig:
+    # Toggle HSV smoothing on/off.
+    enable_smoothing: bool = True
     # Exponential-moving-average factor per frame (0 = frozen, 1 = instant).
     smoothing_alpha: float = 0.18
     # Multiply saturation of the output color by this factor.
@@ -91,6 +93,8 @@ def load(path: Path) -> Config:
         raise ValueError("capture.sample_size must be > 0")
     if not (0.0 <= color.smoothing_alpha <= 1.0):
         raise ValueError("color.smoothing_alpha must be in [0.0, 1.0]")
+    if not isinstance(color.enable_smoothing, bool):
+        raise ValueError("color.enable_smoothing must be true or false")
     if tuya.min_change < 0:
         raise ValueError("tuya.min_change must be >= 0")
     if tuya.bulb_type and tuya.bulb_type not in ("A", "B", "C"):

@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 async def run(cfg: Config) -> None:
     led = LedController(cfg.tuya)
-    smoother = ColorSmoother(cfg.color.smoothing_alpha)
+    smoother = ColorSmoother(cfg.color.smoothing_alpha) if cfg.color.enable_smoothing else None
     interval = cfg.capture.interval_ms / 1000.0
 
     stop = asyncio.Event()
@@ -48,9 +48,9 @@ async def run(cfg: Config) -> None:
                     saturation_boost=cfg.color.saturation_boost,
                     max_saturation=cfg.color.max_saturation,
                 )
-                smooth = smoother.smooth(*raw)
-                log.debug("raw=%s  smooth=%s", raw, smooth)
-                await led.send(*smooth)
+                out = smoother.smooth(*raw) if smoother is not None else raw
+                log.debug("raw=%s  out=%s", raw, out)
+                await led.send(*out)
         except asyncio.CancelledError:
             break
         except Exception as exc:

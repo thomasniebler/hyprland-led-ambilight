@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import tinytuya
@@ -26,6 +27,8 @@ class LedController:
         self._cfg = cfg
         self._dev: tinytuya.BulbDevice | None = None
         self._last: tuple[int, int, int] | None = None
+        self._consecutive_failures = 0
+        self._suspend_until = 0.0
 
     # ------------------------------------------------------------------
     # Internal helpers (called from the thread executor)
@@ -58,8 +61,19 @@ class LedController:
         if callable(close):
             try:
                 close()
-            except Exception:
-                pass
+            except Exception as exc:
+                log.debug("Ignoring device close error during reset: %s", exc)
+
+    def _mark_send_success(self) -> None:
+        self._consecutive_failures = 0
+        self._suspend_until = 0.0
+
+    def _mark_send_failure(self) -> float:
+        self._consecutive_failures += 1
+        exponent = min(self._consecutive_failures - 1, 5)
+        backoff = min(5.0, 0.25 * (2 ** exponent))
+        self._suspend_until = time.monotonic() + backoff
+        return backoff
 
     def _send_sync(self, r: int, g: int, b: int) -> None:
         dev = self._get_device()
@@ -87,6 +101,9 @@ class LedController:
 
     async def send(self, r: int, g: int, b: int) -> None:
         """Send colour to the device if it has changed enough."""
+        if time.monotonic() < self._suspend_until:
+            return
+
         if self._last is not None:
             lr, lg, lb = self._last
             if abs(r - lr) + abs(g - lg) + abs(b - lb) < self._cfg.min_change:
@@ -96,8 +113,14 @@ class LedController:
         try:
             await loop.run_in_executor(_executor, self._send_sync, r, g, b)
             self._last = (r, g, b)
+            self._mark_send_success()
         except Exception:
-            pass  # Already logged in _send_sync
+            backoff = self._mark_send_failure()
+            log.warning(
+                "Tuya send failed (%d consecutive); pausing sends for %.2fs",
+                self._consecutive_failures,
+                backoff,
+            )
 
     async def turn_off(self) -> None:
         """Turn the LED strip off (best-effort; errors are logged, not raised)."""
@@ -108,5 +131,12 @@ class LedController:
             log.warning("Could not turn off device: %s", exc)
 
     def _do_turn_off(self) -> None:
+        dev = self._get_device()
+        try:
+            dev.turn_off()
+            return
+        except Exception as exc:
+            log.warning("Tuya turn_off failed, reconnecting once: %s", exc)
+            self._reset_device()
         dev = self._get_device()
         dev.turn_off()

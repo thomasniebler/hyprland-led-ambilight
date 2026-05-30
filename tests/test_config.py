@@ -36,6 +36,7 @@ def test_minimal_config_loads():
     assert cfg.tuya.ip == "192.168.1.42"
     # Defaults should be populated
     assert cfg.capture.interval_ms == 100
+    assert cfg.color.enable_smoothing is True
     assert cfg.color.smoothing_alpha == 0.18
 
 
@@ -47,6 +48,7 @@ sample_size = 32
 min_saturation = 0.25
 
 [color]
+enable_smoothing = false
 smoothing_alpha = 0.5
 saturation_boost = 2.0
 max_saturation = 0.9
@@ -55,6 +57,7 @@ max_saturation = 0.9
     assert cfg.capture.interval_ms == 200
     assert cfg.capture.sample_size == 32
     assert cfg.capture.min_saturation == 0.25
+    assert cfg.color.enable_smoothing is False
     assert cfg.color.smoothing_alpha == 0.5
     assert cfg.color.saturation_boost == 2.0
     assert cfg.color.max_saturation == 0.9
@@ -110,6 +113,11 @@ def test_invalid_sample_size_raises():
 def test_invalid_smoothing_alpha_raises(alpha):
     with pytest.raises(ValueError, match="smoothing_alpha"):
         load(_write(MINIMAL + f"[color]\nsmoothing_alpha = {alpha}\n"))
+
+
+def test_invalid_enable_smoothing_type_raises():
+    with pytest.raises(ValueError, match="enable_smoothing"):
+        load(_write(MINIMAL + '[color]\nenable_smoothing = "no"\n'))
 
 
 def test_negative_min_change_raises():

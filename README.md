@@ -153,9 +153,10 @@ inline documentation.  Key knobs:
 | `capture.interval_ms` | 100 | Poll interval — lower = faster reaction, more CPU/network |
 | `capture.sample_size` | 64 | Resize dimension before colour analysis |
 | `capture.min_saturation` | 0.15 | Ignore grey/white pixels (terminals, blank desktops) |
-| `color.smoothing_alpha` | 0.3 | EMA factor — lower = slower cinematic fades |
-| `color.saturation_boost` | 1.5 | Multiply saturation — punch up dull content |
-| `color.min_change` | 4 | Skip Tuya send if Euclidean RGB change < this value |
+| `color.enable_smoothing` | `true` | Set `false` for immediate (unsmoothed) color changes |
+| `color.smoothing_alpha` | 0.18 | EMA factor — lower = slower cinematic fades |
+| `color.saturation_boost` | 1.4 | Multiply saturation — punch up dull content |
+| `tuya.min_change` | 4 | Skip Tuya send if summed RGB channel delta < this value |
 
 ---
 
@@ -232,8 +233,8 @@ journalctl --user -u tuyactrl -f   # follow logs
 └─────────────────────────────────────────────────────┘
 ```
 
-Smoothing is done in HSV space to avoid grey midpoints when interpolating
-between two vivid hues (e.g. red → blue).
+When enabled, smoothing is done in HSV space to avoid grey midpoints when
+interpolating between two vivid hues (e.g. red → blue).
 
 ---
 
@@ -243,8 +244,8 @@ between two vivid hues (e.g. red → blue).
 uv run pytest -v
 ```
 
-36 tests across config loading, colour extraction, HSV smoothing, and
-window geometry / capture mocking.
+41 tests across config loading, colour extraction, HSV smoothing, Tuya
+reconnect logic, and window geometry / capture mocking.
 
 ---
 
