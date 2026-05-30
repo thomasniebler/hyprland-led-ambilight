@@ -1,0 +1,49 @@
+# tuyactrl — example configuration
+# Copy to config.toml and fill in your Tuya device details.
+# Run `tuyactrl --scan` to discover devices on your LAN.
+
+# ── Required ────────────────────────────────────────────────────────────────
+
+[tuya]
+device_id = "YOUR_DEVICE_ID"   # 20-char device ID from Tuya IoT platform
+local_key = "YOUR_LOCAL_KEY"   # 16-char local key
+ip        = "192.168.1.xxx"    # LAN IP address of the LED strip controller
+version   = "3.3"              # Tuya protocol version (3.1, 3.3, 3.4, 3.5)
+
+# Optional: pre-configure the bulb type to skip the auto-detection status
+# request on first use.  Most modern RGB LED strips are type B (DPS 20-28).
+# Comment out or remove to let tinytuya auto-detect.
+bulb_type = "B"
+
+# Minimum summed per-channel delta before a new command is actually sent.
+# Raise this if you see too much network chatter; lower it for smoother fades.
+min_change = 4
+
+# ── Capture ─────────────────────────────────────────────────────────────────
+
+[capture]
+# Polling interval in milliseconds.
+interval_ms = 100
+
+# Captured frame is downsampled to this square size before color analysis.
+# Smaller = faster analysis; larger = more colour detail. 32–128 is fine.
+sample_size = 64
+
+# Pixels with HSV saturation below this value are treated as "grey" and
+# excluded from the dominant-colour calculation (keeps white/black UIs from
+# washing out the LED color).  0.0 disables the filter.
+min_saturation = 0.15
+
+# ── Color ───────────────────────────────────────────────────────────────────
+
+[color]
+# Exponential-moving-average alpha applied every frame.
+# 0 = frozen, 1 = instant.  Lower values = smoother, slower transitions.
+smoothing_alpha = 0.18
+
+# Multiply the extracted colour's HSV saturation by this factor so that
+# dim or pastel scenes still produce a vivid LED colour.
+saturation_boost = 1.4
+
+# Saturation is clamped to this value after boost (0.0 – 1.0).
+max_saturation = 1.0
