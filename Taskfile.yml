@@ -36,6 +36,12 @@ tasks:
       - systemctl --user daemon-reload
       - systemctl --user enable --now tuyactrl.service
 
+  start-service:
+    desc: Start (and enable) the existing tuyactrl user service
+    cmds:
+      - systemctl --user daemon-reload
+      - systemctl --user enable --now tuyactrl.service
+
   config-from-raw:
     desc: Generate config.toml from tuya-raw.json or devices.json
     vars:

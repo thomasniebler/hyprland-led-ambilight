@@ -63,6 +63,7 @@ task config-from-raw INPUT=tuya-raw.json DEVICE=<device_id_or_exact_name>
 
 # Install/enable systemd user service
 task install-service
+task start-service
 ```
 
 ---
