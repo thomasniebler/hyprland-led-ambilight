@@ -139,6 +139,12 @@ uv run tuyactrl -v
 
 # Use a custom config path
 uv run tuyactrl -c /path/to/my.toml
+
+# Print runtime status JSON (for automation)
+uv run tuyactrl --status-json
+
+# Print Waybar-compatible JSON
+uv run tuyactrl --waybar
 ```
 
 ---
@@ -235,6 +241,38 @@ journalctl --user -u tuyactrl -f   # follow logs
 
 ---
 
+## Waybar widget
+
+`tuyactrl` writes runtime status to:
+
+```text
+~/.cache/tuyactrl/status.json
+```
+
+You can show state in Waybar via the built-in `--waybar` output:
+
+```json
+{
+  "custom/tuyactrl": {
+    "exec": "/path/to/tuyactrl/.venv/bin/tuyactrl --waybar",
+    "interval": 2,
+    "return-type": "json"
+  }
+}
+```
+
+Optional click action (toggle service):
+
+```json
+{
+  "custom/tuyactrl": {
+    "on-click": "systemctl --user restart tuyactrl.service"
+  }
+}
+```
+
+---
+
 ## How It Works
 
 ```
@@ -267,8 +305,9 @@ interpolating between two vivid hues (e.g. red → blue).
 uv run pytest -v
 ```
 
-47 tests across config loading, context policy, colour extraction, HSV
-smoothing, Tuya reconnect logic, and window geometry / capture mocking.
+52 tests across config loading, context policy, runtime status/Waybar output,
+colour extraction, HSV smoothing, Tuya reconnect logic, and window geometry /
+capture mocking.
 
 ---
 

@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Optional color smoothing via `color.enable_smoothing`.
 - Context-aware auto activation via `[context]` config (AC power, Wi-Fi allow/deny lists, external monitor requirement).
 - Runtime context policy evaluator with automatic pause/resume and optional LED shutdown while inactive.
+- Runtime status file at `~/.cache/tuyactrl/status.json` for integrations.
+- CLI status outputs: `--status-json` and Waybar-friendly `--waybar`.
 
 ### Changed
 - Default for `color.enable_smoothing` is now `false`.

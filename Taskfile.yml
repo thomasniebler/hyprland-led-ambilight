@@ -47,3 +47,13 @@ tasks:
         sh -c 'uv run python scripts/tuya_raw_to_config.py --input "{{.INPUT}}" --output "{{.OUTPUT}}" ${DEVICE:+--device "$DEVICE"}'
     env:
       DEVICE: "{{.DEVICE}}"
+
+  status:
+    desc: Print current runtime status JSON
+    cmds:
+      - uv run tuyactrl --status-json
+
+  waybar-status:
+    desc: Print Waybar-compatible JSON status
+    cmds:
+      - uv run tuyactrl --waybar

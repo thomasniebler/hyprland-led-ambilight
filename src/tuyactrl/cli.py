@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import sys
 from pathlib import Path
 
 from tuyactrl.config import load as load_config
+from tuyactrl.status import DEFAULT_STATUS_FILE, read_status, waybar_json
 
 
 def _setup_logging(verbose: bool) -> None:
@@ -44,6 +46,23 @@ def main() -> None:
         action="store_true",
         help="Run tinytuya's LAN device scanner and exit",
     )
+    parser.add_argument(
+        "--status-json",
+        action="store_true",
+        help="Print runtime status JSON and exit (for scripts/integrations)",
+    )
+    parser.add_argument(
+        "--waybar",
+        action="store_true",
+        help="Print Waybar-compatible JSON status and exit",
+    )
+    parser.add_argument(
+        "--status-file",
+        type=Path,
+        default=DEFAULT_STATUS_FILE,
+        metavar="FILE",
+        help=f"Status file path (default: {DEFAULT_STATUS_FILE})",
+    )
     args = parser.parse_args()
 
     _setup_logging(args.verbose)
@@ -60,6 +79,33 @@ def main() -> None:
                 print(f"\n  ID   : {dev_id}")
                 for k, v in info.items():
                     print(f"  {k:<5}: {v}")
+        sys.exit(0)
+
+    if args.status_json or args.waybar:
+        status = read_status(args.status_file)
+        if status is None:
+            if args.waybar:
+                print(json.dumps({"text": "⚪ ambi", "class": "stopped", "tooltip": "no status file"}))
+            else:
+                print("{}")
+            sys.exit(0)
+        if args.waybar:
+            print(waybar_json(status))
+        else:
+            print(
+                json.dumps(
+                    {
+                        "running": status.running,
+                        "active": status.active,
+                        "reason": status.reason,
+                        "wifi_ssid": status.wifi_ssid,
+                        "ac_power": status.ac_power,
+                        "external_monitor": status.external_monitor,
+                        "last_color": list(status.last_color) if status.last_color else None,
+                        "updated_at": status.updated_at,
+                    }
+                )
+            )
         sys.exit(0)
 
     if not args.config.exists():
