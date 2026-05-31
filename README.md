@@ -4,6 +4,8 @@
 Continuously samples the colour distribution of the focused Hyprland window
 and mirrors it on a local Tuya LED strip — much like Philips TV Ambilight.
 
+See [CHANGELOG.md](CHANGELOG.md) for feature history.
+
 ---
 
 ## Requirements
@@ -191,8 +193,6 @@ Type=simple
 ExecStart=/path/to/tuyactrl/.venv/bin/tuyactrl -c /path/to/tuyactrl/config.toml
 Restart=on-failure
 RestartSec=5s
-# Hyprland socket path — needed for hyprctl
-Environment=HYPRLAND_INSTANCE_SIGNATURE=%i
 
 [Install]
 WantedBy=graphical-session.target
@@ -206,9 +206,8 @@ systemctl --user enable --now tuyactrl
 journalctl --user -u tuyactrl -f   # follow logs
 ```
 
-> **Note:** `HYPRLAND_INSTANCE_SIGNATURE` is set automatically in your
-> Hyprland session.  If the service starts before Hyprland is fully up,
-> add `ExecStartPre=/bin/sleep 3`.
+> **Note:** If the service starts before Hyprland is fully up, add
+> `ExecStartPre=/bin/sleep 3`.
 
 ---
 
@@ -261,4 +260,4 @@ reconnect logic, and window geometry / capture mocking.
 | High CPU usage | Raise `interval_ms` (e.g. 200) or lower `sample_size` (e.g. 32) |
 | `grim` not found | Install grim; ensure it is in PATH |
 | `hyprctl` not found | Only works inside a running Hyprland session |
-| Subprocess timeout | Raise `capture.timeout_s` in config (default 2 s) |
+| Subprocess timeout | Usually means overloaded system or stuck `grim`/`hyprctl`; check `journalctl --user -u tuyactrl -f` |
