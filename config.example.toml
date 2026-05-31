@@ -50,3 +50,29 @@ saturation_boost = 1.4
 
 # Saturation is clamped to this value after boost (0.0 – 1.0).
 max_saturation = 1.0
+
+# ── Context-aware auto activation ─────────────────────────────────────────────
+#
+# Handy for "only run this at home" setups.
+
+[context]
+# Enable context policy checks.
+enabled = false
+
+# Re-check system context (wifi/power/monitor) every N ms.
+poll_interval_ms = 3000
+
+# Require laptop to be on AC/USB-C power.
+require_ac_power = false
+
+# Require at least one external monitor.
+require_external_monitor = false
+
+# Optional allow-list: if non-empty, ambilight runs only on these Wi-Fi SSIDs.
+allowed_ssids = []
+
+# Optional deny-list: ambilight is always disabled on these SSIDs.
+blocked_ssids = []
+
+# Turn strip off when context becomes inactive.
+turn_off_when_inactive = true

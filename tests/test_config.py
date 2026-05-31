@@ -9,6 +9,7 @@ from tuyactrl.config import (
     CaptureConfig,
     ColorConfig,
     Config,
+    ContextConfig,
     TuyaConfig,
     load,
 )
@@ -38,6 +39,8 @@ def test_minimal_config_loads():
     assert cfg.capture.interval_ms == 100
     assert cfg.color.enable_smoothing is False
     assert cfg.color.smoothing_alpha == 0.18
+    assert cfg.context.enabled is False
+    assert cfg.context.poll_interval_ms == 3000
 
 
 def test_full_config_overrides_defaults():
@@ -52,6 +55,15 @@ enable_smoothing = true
 smoothing_alpha = 0.5
 saturation_boost = 2.0
 max_saturation = 0.9
+
+[context]
+enabled = true
+poll_interval_ms = 2500
+require_ac_power = true
+require_external_monitor = true
+allowed_ssids = ["HomeWiFi"]
+blocked_ssids = ["CorpGuest"]
+turn_off_when_inactive = false
 """
     cfg = load(_write(toml))
     assert cfg.capture.interval_ms == 200
@@ -61,6 +73,13 @@ max_saturation = 0.9
     assert cfg.color.smoothing_alpha == 0.5
     assert cfg.color.saturation_boost == 2.0
     assert cfg.color.max_saturation == 0.9
+    assert cfg.context.enabled is True
+    assert cfg.context.poll_interval_ms == 2500
+    assert cfg.context.require_ac_power is True
+    assert cfg.context.require_external_monitor is True
+    assert cfg.context.allowed_ssids == ["HomeWiFi"]
+    assert cfg.context.blocked_ssids == ["CorpGuest"]
+    assert cfg.context.turn_off_when_inactive is False
 
 
 def test_missing_tuya_section_raises():
@@ -99,6 +118,11 @@ def test_unknown_color_key_raises():
         load(_write(MINIMAL + "[color]\nfake_key = 99\n"))
 
 
+def test_unknown_context_key_raises():
+    with pytest.raises(ValueError, match="Unknown keys"):
+        load(_write(MINIMAL + "[context]\nfake_key = 99\n"))
+
+
 def test_invalid_interval_ms_raises():
     with pytest.raises(ValueError, match="interval_ms"):
         load(_write(MINIMAL + "[capture]\ninterval_ms = 0\n"))
@@ -130,6 +154,16 @@ ip         = "1.2.3.4"
 min_change = -1
 """
         load(_write(toml))
+
+
+def test_invalid_context_poll_interval_raises():
+    with pytest.raises(ValueError, match="context.poll_interval_ms"):
+        load(_write(MINIMAL + "[context]\npoll_interval_ms = 0\n"))
+
+
+def test_invalid_context_ssid_list_raises():
+    with pytest.raises(ValueError, match="allowed_ssids"):
+        load(_write(MINIMAL + "[context]\nallowed_ssids = [\"\"]\n"))
 
 
 def test_tuya_version_override():

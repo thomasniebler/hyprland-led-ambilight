@@ -92,6 +92,15 @@ enable_smoothing = false
 smoothing_alpha = 0.18
 saturation_boost = 1.4
 max_saturation = 1.0
+
+[context]
+enabled = false
+poll_interval_ms = 3000
+require_ac_power = false
+require_external_monitor = false
+allowed_ssids = []
+blocked_ssids = []
+turn_off_when_inactive = true
 """
 
 

@@ -51,10 +51,29 @@ class ColorConfig:
 
 
 @dataclass
+class ContextConfig:
+    # Enable context-aware auto start/stop behavior.
+    enabled: bool = False
+    # Poll context probes (wifi/power/monitor) every N milliseconds.
+    poll_interval_ms: int = 3000
+    # Require AC/USB-C external power to run ambilight.
+    require_ac_power: bool = False
+    # Require an external monitor (more than one connected monitor in Hyprland).
+    require_external_monitor: bool = False
+    # If non-empty, ambilight only runs on these SSIDs.
+    allowed_ssids: list[str] = field(default_factory=list)
+    # Ambilight is always disabled on these SSIDs.
+    blocked_ssids: list[str] = field(default_factory=list)
+    # Turn strip off when context becomes inactive.
+    turn_off_when_inactive: bool = True
+
+
+@dataclass
 class Config:
     tuya: TuyaConfig
     capture: CaptureConfig = field(default_factory=CaptureConfig)
     color: ColorConfig = field(default_factory=ColorConfig)
+    context: ContextConfig = field(default_factory=ContextConfig)
 
 
 def _filter_keys(raw: dict, cls: type) -> dict:
@@ -85,6 +104,8 @@ def load(path: Path) -> Config:
 
     color_raw = raw.get("color", {})
     color = ColorConfig(**_filter_keys(color_raw, ColorConfig)) if color_raw else ColorConfig()
+    context_raw = raw.get("context", {})
+    context = ContextConfig(**_filter_keys(context_raw, ContextConfig)) if context_raw else ContextConfig()
 
     # Basic range validation
     if capture.interval_ms <= 0:
@@ -99,5 +120,19 @@ def load(path: Path) -> Config:
         raise ValueError("tuya.min_change must be >= 0")
     if tuya.bulb_type and tuya.bulb_type not in ("A", "B", "C"):
         raise ValueError("tuya.bulb_type must be 'A', 'B', 'C', or omitted")
+    if context.poll_interval_ms <= 0:
+        raise ValueError("context.poll_interval_ms must be > 0")
+    if not isinstance(context.enabled, bool):
+        raise ValueError("context.enabled must be true or false")
+    if not isinstance(context.require_ac_power, bool):
+        raise ValueError("context.require_ac_power must be true or false")
+    if not isinstance(context.require_external_monitor, bool):
+        raise ValueError("context.require_external_monitor must be true or false")
+    if not isinstance(context.turn_off_when_inactive, bool):
+        raise ValueError("context.turn_off_when_inactive must be true or false")
+    if not all(isinstance(ssid, str) and ssid.strip() for ssid in context.allowed_ssids):
+        raise ValueError("context.allowed_ssids must be a list of non-empty strings")
+    if not all(isinstance(ssid, str) and ssid.strip() for ssid in context.blocked_ssids):
+        raise ValueError("context.blocked_ssids must be a list of non-empty strings")
 
-    return Config(tuya=tuya, capture=capture, color=color)
+    return Config(tuya=tuya, capture=capture, color=color, context=context)

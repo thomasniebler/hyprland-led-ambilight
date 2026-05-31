@@ -7,6 +7,7 @@ import signal
 
 from tuyactrl.capture import grab_active_window
 from tuyactrl.color import ColorSmoother, extract_color
+from tuyactrl.context import collect_context_snapshot, evaluate_context_policy
 from tuyactrl.config import Config
 from tuyactrl.tuya import LedController
 
@@ -17,6 +18,11 @@ async def run(cfg: Config) -> None:
     led = LedController(cfg.tuya)
     smoother = ColorSmoother(cfg.color.smoothing_alpha) if cfg.color.enable_smoothing else None
     interval = cfg.capture.interval_ms / 1000.0
+    context_interval = cfg.context.poll_interval_ms / 1000.0
+    context_active = True
+    context_reasons: list[str] = []
+    context_next_check = 0.0
+    turned_off_for_context = False
 
     stop = asyncio.Event()
 
@@ -39,18 +45,48 @@ async def run(cfg: Config) -> None:
         tick_start = loop.time()
 
         try:
-            img = await grab_active_window(cfg.capture)
-            if img is not None:
-                raw = extract_color(
-                    img,
-                    sample_size=cfg.capture.sample_size,
-                    min_saturation=cfg.capture.min_saturation,
-                    saturation_boost=cfg.color.saturation_boost,
-                    max_saturation=cfg.color.max_saturation,
-                )
-                out = smoother.smooth(*raw) if smoother is not None else raw
-                log.debug("raw=%s  out=%s", raw, out)
-                await led.send(*out)
+            if cfg.context.enabled and tick_start >= context_next_check:
+                snapshot = await collect_context_snapshot()
+                context_active, new_reasons = evaluate_context_policy(cfg.context, snapshot)
+                if context_active != (len(context_reasons) == 0) or new_reasons != context_reasons:
+                    if context_active:
+                        turned_off_for_context = False
+                        log.info(
+                            "Context became active (wifi=%s ac=%s ext-monitor=%s)",
+                            snapshot.wifi_ssid,
+                            snapshot.ac_power,
+                            snapshot.external_monitor,
+                        )
+                    else:
+                        log.info(
+                            "Context inactive (%s) (wifi=%s ac=%s ext-monitor=%s)",
+                            ", ".join(new_reasons),
+                            snapshot.wifi_ssid,
+                            snapshot.ac_power,
+                            snapshot.external_monitor,
+                        )
+                context_reasons = new_reasons
+                context_next_check = tick_start + context_interval
+
+            if cfg.context.enabled and not context_active:
+                if cfg.context.turn_off_when_inactive and not turned_off_for_context:
+                    await led.turn_off()
+                    if smoother is not None:
+                        smoother.reset()
+                    turned_off_for_context = True
+            else:
+                img = await grab_active_window(cfg.capture)
+                if img is not None:
+                    raw = extract_color(
+                        img,
+                        sample_size=cfg.capture.sample_size,
+                        min_saturation=cfg.capture.min_saturation,
+                        saturation_boost=cfg.color.saturation_boost,
+                        max_saturation=cfg.color.max_saturation,
+                    )
+                    out = smoother.smooth(*raw) if smoother is not None else raw
+                    log.debug("raw=%s  out=%s", raw, out)
+                    await led.send(*out)
         except asyncio.CancelledError:
             break
         except Exception as exc:

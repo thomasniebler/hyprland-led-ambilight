@@ -159,6 +159,30 @@ inline documentation.  Key knobs:
 | `color.smoothing_alpha` | 0.18 | EMA factor — lower = slower cinematic fades |
 | `color.saturation_boost` | 1.4 | Multiply saturation — punch up dull content |
 | `tuya.min_change` | 4 | Skip Tuya send if summed RGB channel delta < this value |
+| `context.enabled` | `false` | Enable context-aware auto activation |
+| `context.require_ac_power` | `false` | Only run when AC/USB-C power is connected |
+| `context.require_external_monitor` | `false` | Only run when more than one Hyprland monitor is connected |
+| `context.allowed_ssids` | `[]` | Optional Wi-Fi allow-list (run only on these SSIDs) |
+| `context.blocked_ssids` | `[]` | Optional Wi-Fi deny-list (always disable on these SSIDs) |
+
+---
+
+### Context-aware auto activation (home vs work)
+
+Example: run ambilight only at home, on AC power, with an external monitor:
+
+```toml
+[context]
+enabled = true
+require_ac_power = true
+require_external_monitor = true
+allowed_ssids = ["MyHomeWifi"]
+blocked_ssids = ["CorpWiFi", "CorpGuest"]
+turn_off_when_inactive = true
+```
+
+`tuyactrl` will keep running, but it pauses capture/send whenever context is
+inactive and resumes automatically when conditions match again.
 
 ---
 
@@ -243,8 +267,8 @@ interpolating between two vivid hues (e.g. red → blue).
 uv run pytest -v
 ```
 
-41 tests across config loading, colour extraction, HSV smoothing, Tuya
-reconnect logic, and window geometry / capture mocking.
+47 tests across config loading, context policy, colour extraction, HSV
+smoothing, Tuya reconnect logic, and window geometry / capture mocking.
 
 ---
 
